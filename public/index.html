@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ESP32 LED Color Game</title>
+    <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+    <style>
+      :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+      body { max-width: 42rem; margin: 3rem auto; padding: 0 1.25rem; background: #10131a; color: #f4f7fb; }
+      main { padding: 2rem; border: 1px solid #303947; border-radius: 1rem; background: #191f2a; }
+      h1 { margin-top: 0; }
+      li { margin: .5rem 0; }
+      code { color: #8be9fd; }
+      esp-web-install-button { --esp-tools-button-color: #7c3aed; --esp-tools-button-text-color: white; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>ESP32 LED Color Game</h1>
+      <p>Install the game on a classic ESP32 DevKit V1.</p>
+
+      <esp-web-install-button manifest="manifest.json">
+        <button slot="activate">Install firmware</button>
+        <span slot="unsupported">Use Google Chrome or Microsoft Edge on a computer.</span>
+        <span slot="not-allowed">This page must be served over HTTPS.</span>
+      </esp-web-install-button>
+
+      <h2>Before installing</h2>
+      <ol>
+        <li>Use a USB <strong>data</strong> cable and connect the ESP32.</li>
+        <li>Click <strong>Install firmware</strong> and select its serial port.</li>
+        <li>If the board is not detected, hold <code>BOOT</code>, tap <code>EN</code>, then try again.</li>
+      </ol>
+
+      <p>This replaces the firmware currently on the board. The game uses a 33-pixel WS2812/NeoPixel strip on GPIO 13 and buttons on GPIO 12, 14, and 27.</p>
+    </main>
+  </body>
+</html>
