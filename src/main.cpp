@@ -19,10 +19,10 @@ constexpr int MAX_MINIONS = TOTAL_ENEMIES + MAX_BULLETS;
 constexpr unsigned long BUTTON_DEBOUNCE_MS = 40;
 constexpr unsigned long BULLET_MOVE_MS = 35;
 constexpr unsigned long SPAWN_DELAY_MS = 80;
-constexpr unsigned long VICTORY_CHASE_MS = 80;
+constexpr unsigned long VICTORY_SWEEP_MS = 40;
+constexpr unsigned long VICTORY_FLASH_MS = 160;
 constexpr uint8_t VICTORY_BRIGHTNESS = 2;
-constexpr int VICTORY_LIGHTS_PER_COLOR = 4;
-constexpr int VICTORY_TRAIN_LENGTH = VICTORY_LIGHTS_PER_COLOR * 3;
+constexpr int VICTORY_FLASH_COUNT = 3;
 
 constexpr int STARTING_ENEMY_DELAY = 600;
 // LEDs 0-7 are reserved as a physical buffer in front of the player.
@@ -149,44 +149,33 @@ void victory()
     strip.setBrightness(VICTORY_BRIGHTNESS);
     strip.show();
 
-    // A three-colour victory convoy travels from the player to the far end.
-    // Yellow launches first, then red, then blue, so it appears bottom-to-top
-    // as blue, red, yellow once the full convoy is on the strip.
-    for (int frame = 0;
-         frame < LED_COUNT - BULLET_START_LED + VICTORY_TRAIN_LENGTH - 1;
-         frame++)
+    // Rainbow victory sweep, followed by three slower rainbow flashes.
+    for (int pixel = BULLET_START_LED; pixel < LED_COUNT; pixel++)
     {
-        strip.clear();
-
-        for (int light = 0;
-             light < VICTORY_TRAIN_LENGTH && light <= frame;
-             light++)
-        {
-            int pixel = BULLET_START_LED + frame - light;
-            if (pixel < BULLET_START_LED || pixel >= LED_COUNT)
-            {
-                continue;
-            }
-
-            uint32_t color;
-            if (light < VICTORY_LIGHTS_PER_COLOR)
-            {
-                color = COLOR_YELLOW;
-            }
-            else if (light < VICTORY_LIGHTS_PER_COLOR * 2)
-            {
-                color = COLOR_RED;
-            }
-            else
-            {
-                color = COLOR_BLUE;
-            }
-
-            strip.setPixelColor(pixel, color);
-        }
-
+        uint16_t hue = (pixel - BULLET_START_LED) * 65536UL /
+                       (LED_COUNT - BULLET_START_LED);
+        strip.setPixelColor(pixel, strip.gamma32(strip.ColorHSV(hue, 255, 255)));
         strip.show();
-        delay(VICTORY_CHASE_MS);
+        delay(VICTORY_SWEEP_MS);
+    }
+
+    for (int flash = 0; flash < VICTORY_FLASH_COUNT; flash++)
+    {
+        for (int pixel = BULLET_START_LED; pixel < LED_COUNT; pixel++)
+        {
+            uint16_t hue = (pixel - BULLET_START_LED) * 65536UL /
+                           (LED_COUNT - BULLET_START_LED);
+            strip.setPixelColor(pixel, strip.gamma32(strip.ColorHSV(hue, 255, 255)));
+        }
+        strip.show();
+        delay(VICTORY_FLASH_MS);
+
+        if (flash < VICTORY_FLASH_COUNT - 1)
+        {
+            strip.clear();
+            strip.show();
+            delay(VICTORY_FLASH_MS);
+        }
     }
 
     strip.clear();
