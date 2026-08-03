@@ -8,7 +8,7 @@
 #define BTN_RED 14
 #define BTN_YELLOW 27
 
-#define LED_BRIGHTNESS 51
+#define LED_BRIGHTNESS 13
 
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
