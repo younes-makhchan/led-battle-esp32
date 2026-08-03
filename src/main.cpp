@@ -24,8 +24,13 @@ constexpr unsigned long VICTORY_FLASH_MS = 90;
 constexpr int VICTORY_FLASH_COUNT = 4;
 
 constexpr int STARTING_ENEMY_DELAY = 600;
-constexpr int PLAYER_BUFFER_LEDS = 15;
-constexpr int INITIAL_ENEMIES = LED_COUNT - PLAYER_BUFFER_LEDS;
+// LEDs 0-7 are reserved as a physical buffer in front of the player.
+constexpr int PLAYER_BUFFER_LEDS = 8;
+constexpr int BULLET_START_LED = PLAYER_BUFFER_LEDS;
+// Keep the first enemy eight LEDs beyond the bullet starting point.
+constexpr int ENEMY_START_GAP_LEDS = 8;
+constexpr int INITIAL_ENEMY_START_LED = BULLET_START_LED + ENEMY_START_GAP_LEDS;
+constexpr int INITIAL_ENEMIES = min(TOTAL_ENEMIES, LED_COUNT - INITIAL_ENEMY_START_LED);
 
 uint32_t COLOR_BLUE;
 uint32_t COLOR_RED;
@@ -212,7 +217,7 @@ void updateSpawning()
     {
         if (millis() - lastSpawn >= SPAWN_DELAY_MS)
         {
-            addMinion(PLAYER_BUFFER_LEDS + spawnIndex, randomGameColor());
+            addMinion(INITIAL_ENEMY_START_LED + spawnIndex, randomGameColor());
             spawnIndex++;
             lastSpawn = millis();
         }
@@ -228,7 +233,7 @@ void addBullet(uint32_t color)
 {
     if (bulletCount < MAX_BULLETS)
     {
-        bullets[bulletCount++] = {0, color};
+        bullets[bulletCount++] = {BULLET_START_LED, color};
     }
 }
 
@@ -325,6 +330,11 @@ void updateEnemies()
         minions[i].pos--;
     }
 
+    // Detect contacts caused by enemy movement before bullets move again.
+    // Without this, an adjacent enemy and bullet can swap positions between
+    // updates and the bullet appears to pass through the enemy.
+    checkBulletCollisions();
+
     if (spawnIndex < TOTAL_ENEMIES)
     {
         addMinion(LED_COUNT - 1, randomGameColor());
@@ -355,7 +365,7 @@ bool enemiesReachedPlayer()
 {
     for (int i = 0; i < minionCount; i++)
     {
-        if (minions[i].pos <= 0)
+        if (minions[i].pos <= PLAYER_BUFFER_LEDS)
         {
             return true;
         }
