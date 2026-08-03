@@ -8,7 +8,7 @@
 #define BTN_RED 14
 #define BTN_YELLOW 27
 
-#define LED_BRIGHTNESS 3
+#define LED_BRIGHTNESS 51
 
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
@@ -21,7 +21,7 @@ constexpr unsigned long BULLET_MOVE_MS = 35;
 constexpr unsigned long SPAWN_DELAY_MS = 80;
 constexpr unsigned long VICTORY_SWEEP_MS = 40;
 constexpr unsigned long VICTORY_FLASH_MS = 160;
-constexpr uint8_t VICTORY_BRIGHTNESS = 2;
+constexpr uint8_t VICTORY_BRIGHTNESS = 46;
 constexpr int VICTORY_FLASH_COUNT = 3;
 
 constexpr int STARTING_ENEMY_DELAY = 600;
@@ -135,7 +135,7 @@ void rainbow()
             (i * 65536UL / LED_COUNT + offset) & 0xFFFF
         );
         strip.setPixelColor(i, strip.gamma32(strip.ColorHSV(
-            hue, 255, LED_BRIGHTNESS
+            hue, 255, 255
         )));
     }
 
