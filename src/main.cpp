@@ -13,7 +13,7 @@
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 constexpr int MAX_BULLETS = 20;
-constexpr int TOTAL_ENEMIES = 20;
+constexpr int TOTAL_ENEMIES = 10;
 constexpr int MAX_MINIONS = TOTAL_ENEMIES + MAX_BULLETS;
 
 constexpr unsigned long BUTTON_DEBOUNCE_MS = 40;
@@ -27,8 +27,8 @@ constexpr int STARTING_ENEMY_DELAY = 600;
 // LEDs 0-7 are reserved as a physical buffer in front of the player.
 constexpr int PLAYER_BUFFER_LEDS = 8;
 constexpr int BULLET_START_LED = PLAYER_BUFFER_LEDS;
-// Keep the first enemy eight LEDs beyond the bullet starting point.
-constexpr int ENEMY_START_GAP_LEDS = 8;
+// Keep the first enemy thirteen LEDs beyond the bullet starting point.
+constexpr int ENEMY_START_GAP_LEDS = 13;
 constexpr int INITIAL_ENEMY_START_LED = BULLET_START_LED + ENEMY_START_GAP_LEDS;
 constexpr int INITIAL_ENEMIES = min(TOTAL_ENEMIES, LED_COUNT - INITIAL_ENEMY_START_LED);
 
@@ -293,11 +293,10 @@ void checkBulletCollisions()
         {
             removeMinion(matchingMinion);
         }
-        else
-        {
-            addMinion(bullets[bulletIndex].pos - 1, bullets[bulletIndex].color);
-        }
 
+        // A wrong-colour shot is consumed, but it must not create another
+        // enemy; otherwise the visible wave can be cleared without meeting
+        // the victory condition.
         removeBullet(bulletIndex--);
     }
 }
