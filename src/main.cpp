@@ -8,7 +8,7 @@
 #define BTN_RED 14
 #define BTN_YELLOW 27
 
-#define LED_BRIGHTNESS 13
+#define LED_BRIGHTNESS 3
 
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
@@ -280,10 +280,13 @@ void checkBulletCollisions()
         {
             removeMinion(matchingMinion);
         }
+        else
+        {
+            // A wrong-colour bullet turns into an enemy just below the enemy
+            // it hit, so firing random colours makes the wave harder.
+            addMinion(bullets[bulletIndex].pos - 1, bullets[bulletIndex].color);
+        }
 
-        // A wrong-colour shot is consumed, but it must not create another
-        // enemy; otherwise the visible wave can be cleared without meeting
-        // the victory condition.
         removeBullet(bulletIndex--);
     }
 }
