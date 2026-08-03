@@ -19,9 +19,8 @@ constexpr int MAX_MINIONS = TOTAL_ENEMIES + MAX_BULLETS;
 constexpr unsigned long BUTTON_DEBOUNCE_MS = 40;
 constexpr unsigned long BULLET_MOVE_MS = 35;
 constexpr unsigned long SPAWN_DELAY_MS = 80;
-constexpr unsigned long VICTORY_SWEEP_MS = 25;
-constexpr unsigned long VICTORY_FLASH_MS = 90;
-constexpr int VICTORY_FLASH_COUNT = 4;
+constexpr unsigned long VICTORY_CLEAR_MS = 45;
+constexpr unsigned long VICTORY_HOLD_MS = 1500;
 
 constexpr int STARTING_ENEMY_DELAY = 600;
 // LEDs 0-7 are reserved as a physical buffer in front of the player.
@@ -145,33 +144,26 @@ void rainbow()
 void victory()
 {
     strip.clear();
-    for (int pixel = 0; pixel < LED_COUNT; pixel++)
+    strip.show();
+
+    // Tetris-style clear: sweep the playable area from the far end back to
+    // the player, then show one calm green stage-clear result.
+    const uint32_t CLEAR_COLOR = strip.Color(255, 255, 180);
+    const uint32_t VICTORY_COLOR = strip.Color(0, 255, 50);
+
+    for (int pixel = LED_COUNT - 1; pixel >= BULLET_START_LED; pixel--)
     {
-        strip.setPixelColor(pixel, strip.gamma32(strip.ColorHSV(
-            pixel * 65536UL / LED_COUNT, 255, 255
-        )));
+        strip.setPixelColor(pixel, CLEAR_COLOR);
         strip.show();
-        delay(VICTORY_SWEEP_MS);
+        delay(VICTORY_CLEAR_MS);
     }
 
-    for (int flash = 0; flash < VICTORY_FLASH_COUNT; flash++)
+    for (int pixel = BULLET_START_LED; pixel < LED_COUNT; pixel++)
     {
-        for (int pixel = 0; pixel < LED_COUNT; pixel++)
-        {
-            strip.setPixelColor(pixel, strip.gamma32(strip.ColorHSV(
-                pixel * 65536UL / LED_COUNT, 255, 255
-            )));
-        }
-        strip.show();
-        delay(VICTORY_FLASH_MS);
-
-        if (flash < VICTORY_FLASH_COUNT - 1)
-        {
-            strip.clear();
-            strip.show();
-            delay(VICTORY_FLASH_MS);
-        }
+        strip.setPixelColor(pixel, VICTORY_COLOR);
     }
+    strip.show();
+    delay(VICTORY_HOLD_MS);
 }
 
 void resetGame()
