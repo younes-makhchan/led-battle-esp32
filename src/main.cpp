@@ -13,7 +13,7 @@
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 constexpr int MAX_BULLETS = 20;
-constexpr int TOTAL_ENEMIES = 10;
+constexpr int TOTAL_ENEMIES = 15;
 constexpr int MAX_MINIONS = TOTAL_ENEMIES + MAX_BULLETS;
 
 constexpr unsigned long BUTTON_DEBOUNCE_MS = 40;
@@ -30,7 +30,9 @@ constexpr int BULLET_START_LED = PLAYER_BUFFER_LEDS;
 // Keep the first enemy thirteen LEDs beyond the bullet starting point.
 constexpr int ENEMY_START_GAP_LEDS = 13;
 constexpr int INITIAL_ENEMY_START_LED = BULLET_START_LED + ENEMY_START_GAP_LEDS;
-constexpr int INITIAL_ENEMIES = min(TOTAL_ENEMIES, LED_COUNT - INITIAL_ENEMY_START_LED);
+constexpr int INITIAL_ENEMIES = TOTAL_ENEMIES;
+// Enemies beyond LED 32 are intentionally off-strip until they move into view.
+constexpr int FARTHEST_ENEMY_START_LED = INITIAL_ENEMY_START_LED + TOTAL_ENEMIES - 1;
 
 uint32_t COLOR_BLUE;
 uint32_t COLOR_RED;
@@ -146,7 +148,7 @@ void victory()
     for (int pixel = 0; pixel < LED_COUNT; pixel++)
     {
         strip.setPixelColor(pixel, strip.gamma32(strip.ColorHSV(
-            pixel * 65536UL / LED_COUNT, 255, LED_BRIGHTNESS
+            pixel * 65536UL / LED_COUNT, 255, 255
         )));
         strip.show();
         delay(VICTORY_SWEEP_MS);
@@ -157,7 +159,7 @@ void victory()
         for (int pixel = 0; pixel < LED_COUNT; pixel++)
         {
             strip.setPixelColor(pixel, strip.gamma32(strip.ColorHSV(
-                pixel * 65536UL / LED_COUNT, 255, LED_BRIGHTNESS
+                pixel * 65536UL / LED_COUNT, 255, 255
             )));
         }
         strip.show();
@@ -203,7 +205,7 @@ uint32_t randomGameColor()
 
 void addMinion(int position, uint32_t color)
 {
-    if (minionCount >= MAX_MINIONS || position < 0 || position >= LED_COUNT)
+    if (minionCount >= MAX_MINIONS || position < 0 || position > FARTHEST_ENEMY_START_LED)
     {
         return;
     }
@@ -247,21 +249,14 @@ void removeMinion(int index)
     minions[index] = minions[--minionCount];
 }
 
-void moveEnemiesBackward(int distance)
-{
-    for (int i = 0; i < minionCount; i++)
-    {
-        minions[i].pos -= distance;
-    }
-}
-
 void checkBulletCollisions()
 {
     for (int bulletIndex = 0; bulletIndex < bulletCount; bulletIndex++)
     {
         if (bullets[bulletIndex].pos >= LED_COUNT)
         {
-            moveEnemiesBackward(2);
+            // A missed bullet leaves the strip. It must not move every enemy
+            // into the player buffer and accidentally end a cleared stage.
             removeBullet(bulletIndex--);
             continue;
         }
