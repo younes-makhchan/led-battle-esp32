@@ -19,8 +19,10 @@ constexpr int MAX_MINIONS = TOTAL_ENEMIES + MAX_BULLETS;
 constexpr unsigned long BUTTON_DEBOUNCE_MS = 40;
 constexpr unsigned long BULLET_MOVE_MS = 35;
 constexpr unsigned long SPAWN_DELAY_MS = 80;
-constexpr unsigned long VICTORY_CLEAR_MS = 45;
-constexpr unsigned long VICTORY_HOLD_MS = 1500;
+constexpr unsigned long VICTORY_CHASE_MS = 80;
+constexpr uint8_t VICTORY_BRIGHTNESS = 2;
+constexpr int VICTORY_LIGHTS_PER_COLOR = 4;
+constexpr int VICTORY_TRAIN_LENGTH = VICTORY_LIGHTS_PER_COLOR * 3;
 
 constexpr int STARTING_ENEMY_DELAY = 600;
 // LEDs 0-7 are reserved as a physical buffer in front of the player.
@@ -144,26 +146,52 @@ void rainbow()
 void victory()
 {
     strip.clear();
+    strip.setBrightness(VICTORY_BRIGHTNESS);
     strip.show();
 
-    // Tetris-style clear: sweep the playable area from the far end back to
-    // the player, then show one calm green stage-clear result.
-    const uint32_t CLEAR_COLOR = strip.Color(255, 255, 180);
-    const uint32_t VICTORY_COLOR = strip.Color(0, 255, 50);
-
-    for (int pixel = LED_COUNT - 1; pixel >= BULLET_START_LED; pixel--)
+    // A three-colour victory convoy travels from the player to the far end.
+    // Yellow launches first, then red, then blue, so it appears bottom-to-top
+    // as blue, red, yellow once the full convoy is on the strip.
+    for (int frame = 0;
+         frame < LED_COUNT - BULLET_START_LED + VICTORY_TRAIN_LENGTH - 1;
+         frame++)
     {
-        strip.setPixelColor(pixel, CLEAR_COLOR);
+        strip.clear();
+
+        for (int light = 0;
+             light < VICTORY_TRAIN_LENGTH && light <= frame;
+             light++)
+        {
+            int pixel = BULLET_START_LED + frame - light;
+            if (pixel < BULLET_START_LED || pixel >= LED_COUNT)
+            {
+                continue;
+            }
+
+            uint32_t color;
+            if (light < VICTORY_LIGHTS_PER_COLOR)
+            {
+                color = COLOR_YELLOW;
+            }
+            else if (light < VICTORY_LIGHTS_PER_COLOR * 2)
+            {
+                color = COLOR_RED;
+            }
+            else
+            {
+                color = COLOR_BLUE;
+            }
+
+            strip.setPixelColor(pixel, color);
+        }
+
         strip.show();
-        delay(VICTORY_CLEAR_MS);
+        delay(VICTORY_CHASE_MS);
     }
 
-    for (int pixel = BULLET_START_LED; pixel < LED_COUNT; pixel++)
-    {
-        strip.setPixelColor(pixel, VICTORY_COLOR);
-    }
+    strip.clear();
     strip.show();
-    delay(VICTORY_HOLD_MS);
+    strip.setBrightness(LED_BRIGHTNESS);
 }
 
 void resetGame()
